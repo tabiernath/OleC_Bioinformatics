@@ -1,0 +1,20 @@
+# Install packages
+pacman::p_load("tidyverse", "DECIPHER", "Biostrings", "ggseqlogo", "cowplot")
+
+# Set working directory (**this is computer-specific**)
+setwd(YOUR DIRECTORY HERE ex. "C:/Users/myuser/OneDrive/Documents/")
+
+# Read in the query and reference sequences (**this is data-specific**)
+query_olec <- readAAStringSet("data/9_olec.fasta")
+query <- query_olec[1]
+names(query)
+ref <- readAAStringSet("data/xanthomonas_olec.fasta")
+names(ref) <- "Xanthomonas"
+  
+# Align the query and the reference
+alned <- DECIPHER::AlignSeqs(c(ref, query_olec), verbose = TRUE)
+
+# View the alignment
+BrowseSeqs(alned, "output/alnedseqX.html")
+
+# You may choose to remove some sequences from your alignment if they have large domains that others do not because it will make borwsing more difficult
