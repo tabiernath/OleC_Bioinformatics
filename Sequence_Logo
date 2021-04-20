@@ -1,0 +1,89 @@
+# Install packages
+pacman::p_load("tidyverse", "DECIPHER", "Biostrings", "ggseqlogo", "cowplot")
+
+# Set working directory (**this is computer-specific**)
+setwd(YOUR DIRECTORY HERE ex. "C:/Users/myuser/OneDrive/Documents/")
+
+# Load and assign sequences
+seqs <- readAAStringSet("data/8_olec_no_th.fasta") # All sequences you want in the figure
+ref <- readAAStringSet("data/xanthomonas_OleC.fasta") # Sequence that you want them all aligned with
+names(ref) <- "Xanthomonas" # Reference name
+impres <- read_csv("data/important_res.csv") # file with positions important residues in reference sequence
+aa_inds <- sort(impres$position) # column of data with numbered positions
+
+
+# Make getresidues function
+
+# Gets residues on query that match aa_inds from a reference
+
+getresidues <- function(query, ref, aa_inds) {
+# Align sequences
+  alned <- DECIPHER::AlignSeqs(c(ref, query), verbose = FALSE)
+  ref_aln <- alned[1]
+  query_aln <- alned[length(alned)]
+  
+  poslist <- list()
+  position = 1
+# Count through alignment to account for gaps  
+  for(j in 1:width(ref_aln)) {
+    if (substr(ref_aln, j, j) != "-") {
+      if (position %in% aa_inds) {
+        poslist[[j]] <- j}
+      position = position + 1}}
+  
+  new_inds <- unlist(poslist)
+  
+  query_pos <- as.character(unlist(lapply(1:length(new_inds), function(x) {
+    substr(query_aln, new_inds[x], new_inds[x]) })))
+  
+  olec_impres <- paste0(query_pos, collapse = "")
+  return(olec_impres)
+}
+
+
+resultlist <- c(1:6)
+
+for(i in 1:length(seqs)) {
+  query <- seqs[i]
+  resultlist[[i]] <- getresidues(query = query,
+                                  ref = ref,
+                                  aa_inds = aa_inds)
+} # End of getresidues
+
+
+view(resultlist)
+resultdat <- data.frame(resultlist)
+colnames(resultdat) <- "sequence"
+
+# Make plots down here like these!
+pdf("output/olec_impres_logo_combined_8_olec_no_th.pdf", height = 2, width = 8)
+p <- ggplot() + 
+  geom_logo(resultdat[,1], method = "p", col_scheme = 'chemistry') + 
+  theme_logo() +
+  ggtitle(label = "Other Beta-Lactone Synthetases")
+p
+dev.off()
+
+
+# This is another example with a combined plot from above
+seqs <- readAAStringSet("data/9_olec.fasta")
+query <- seqs[1]
+length(seqs)
+ref <- readAAStringSet("data/xanthomonas_OleC.fasta")
+names(ref) <- "Xanthomonas"
+impres <- read_csv("data/important_res.csv")
+aa_inds <- sort(impres$position)
+
+# Get the function I made forever ago
+source("src/get_residues.r")
+therm <- getresidues(query, ref, aa_inds)
+
+p1 <- ggplot() + 
+  geom_logo(therm, method = "p", col_scheme = 'chemistry') + 
+  theme_logo() +
+  ggtitle(label = "Thermomonas Hydrothermalis")
+
+pdf("output/olec_impres_logo_t_vs_other_8_olec.pdf", height = 4)
+plot_grid(p1, p, ncol = 1)
+dev.off()
+
