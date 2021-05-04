@@ -17,4 +17,4 @@ alned <- DECIPHER::AlignSeqs(c(ref, query_olec), verbose = TRUE)
 # View the alignment
 BrowseSeqs(alned, "output/alnedseqX.html")
 
-# You may choose to remove some sequences from your alignment if they have large domains that others do not because it will make borwsing more difficult
+# You may choose to remove some sequences from your alignment if they have large domains that others do not because it will make browsing more difficult
